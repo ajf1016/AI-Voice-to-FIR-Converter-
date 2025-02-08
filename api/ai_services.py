@@ -8,8 +8,6 @@ load_dotenv()
 # Load API Key
 GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
 
-print("FROM google", GOOGLE_API_KEY)
-
 # Load Whisper model
 whisper_model = whisper.load_model("base")
 

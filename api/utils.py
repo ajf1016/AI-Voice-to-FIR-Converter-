@@ -1,8 +1,7 @@
 from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Spacer, Paragraph
 from reportlab.lib import colors
-from reportlab.lib.units import inch
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
 import os
 
 
@@ -14,6 +13,7 @@ def generate_pdf(fir_instance):
     # Create PDF document
     doc = SimpleDocTemplate(pdf_path, pagesize=letter)
     elements = []
+    styles = getSampleStyleSheet()
 
     # Header
     title = [
@@ -54,11 +54,16 @@ def generate_pdf(fir_instance):
     elements.append(complaint_table)
     elements.append(Spacer(1, 12))
 
+    # Use Paragraphs to Wrap Long Text
+    original_text_paragraph = Paragraph(
+        fir_instance.original_text, styles["BodyText"])
+    fir_text_paragraph = Paragraph(fir_instance.fir_text, styles["BodyText"])
+
     # FIR Details
     fir_details = [
         ["FIR Details"],
-        ["Original Complaint", fir_instance.original_text],
-        ["Generated FIR", fir_instance.fir_text],
+        ["Original Complaint", original_text_paragraph],
+        ["Generated FIR", fir_text_paragraph],
     ]
 
     fir_table = Table(fir_details, colWidths=[150, 350])
