@@ -7,6 +7,12 @@ from django.conf import settings
 import os
 from .ai_services import audio_to_text, generate_fir
 from .utils import generate_pdf
+from dotenv import load_dotenv
+
+load_dotenv()
+
+
+GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
 
 
 @api_view(['POST'])
@@ -43,6 +49,7 @@ def upload_audio(request):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def convert_audio_to_fir(request, audio_id):
+    print("API KEY", GOOGLE_API_KEY)
     """ Generate FIR from stored audio transcription """
     try:
         audio = Audio.objects.get(id=audio_id)
@@ -63,7 +70,7 @@ def convert_audio_to_fir(request, audio_id):
         audio=audio
     )
 
-    # Generate FIR PDF
+    # Generate FIR PDF with new format
     pdf_path = generate_pdf(fir_instance)
 
     # Attach PDF to FIR
