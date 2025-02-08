@@ -6,9 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Load API Key
-# GOOGLE_API_KEY =
-GOOGLE_API_KEY = 'AIzaSyAvxHtLO37mwywyziLCcqrenCR2VDUYJb0'
-genai.configure(api_key=GOOGLE_API_KEY)
+GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
 
 # Load Whisper model
 whisper_model = whisper.load_model("base")
