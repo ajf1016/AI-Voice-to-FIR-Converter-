@@ -1,13 +1,16 @@
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
-from .models import Audio, FIR
-from .serializers import AudioSerializer, FIRSerializer
+from .models import Audio, FIR, PoliceOfficer
+from .serializers import AudioSerializer, RegisterSerializer, LoginSerializer, PoliceOfficerSerializer
 from django.conf import settings
 import os
 from .ai_services import audio_to_text, generate_fir
 from .utils import generate_pdf
 from dotenv import load_dotenv
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework import status
+from django.core.files import File
+
 
 load_dotenv()
 
@@ -15,8 +18,38 @@ load_dotenv()
 GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
 
 
-@api_view(['POST'])
+@api_view(["POST"])
 @permission_classes([AllowAny])
+def register_police(request):
+    """ Register a new police officer """
+    serializer = RegisterSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response({"message": "Registration successful"}, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def login_police(request):
+    """ Authenticate and return JWT token """
+    serializer = LoginSerializer(data=request.data)
+    if serializer.is_valid():
+        return Response(serializer.validated_data, status=status.HTTP_200_OK)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_profile(request):
+    """ Get logged-in police officer's profile """
+    officer = request.user
+    serializer = PoliceOfficerSerializer(officer)
+    return Response(serializer.data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def upload_audio(request):
     """ Uploads an audio file and automatically converts it to text """
     context = {
@@ -47,9 +80,8 @@ def upload_audio(request):
 
 
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def convert_audio_to_fir(request, audio_id):
-    print("API KEY", GOOGLE_API_KEY)
     """ Generate FIR from stored audio transcription """
     try:
         audio = Audio.objects.get(id=audio_id)
@@ -60,7 +92,7 @@ def convert_audio_to_fir(request, audio_id):
     if not audio.transcribed_text:
         return Response({"status": "error", "message": "Audio transcription missing"}, status=400)
 
-    # Generate FIR from transcribed text
+    # Generate FIR text
     fir_text = generate_fir(audio.transcribed_text)
 
     # Create FIR Entry in DB
@@ -70,23 +102,22 @@ def convert_audio_to_fir(request, audio_id):
         audio=audio
     )
 
-    # Generate FIR PDF with new format
+    # Generate FIR PDF and store it properly
     pdf_path = generate_pdf(fir_instance)
 
-    # Attach PDF to FIR
-    fir_instance.fir_pdf = pdf_path
-    fir_instance.save()
+    # Open the file as a Django File object
+    with open(pdf_path, "rb") as pdf_file:
+        fir_instance.fir_pdf.save(os.path.basename(
+            pdf_path), File(pdf_file), save=True)
 
     return Response({
         "status": "success",
         "case_id": fir_instance.case_id,
-        # Victim's voice
         "audio_file": request.build_absolute_uri(audio.audio_file.url),
-        "transcribed_text": audio.transcribed_text,  # Raw text
-        "fir_text": fir_instance.fir_text,  # Raw FIR text
-        "created_at": fir_instance.created_at,  # Timestamp
-        # PDF URL
-        "fir_pdf": request.build_absolute_uri(fir_instance.fir_pdf.url)
+        "transcribed_text": audio.transcribed_text,
+        "fir_text": fir_instance.fir_text,
+        "created_at": fir_instance.created_at,
+        "fir_pdf": request.build_absolute_uri(fir_instance.fir_pdf.url),
     })
 
 
@@ -107,5 +138,5 @@ def get_fir_details(request, case_id):
         "transcribed_text": fir.original_text,  # Raw text
         "fir_text": fir.fir_text,  # Raw FIR text
         "created_at": fir.created_at,  # Timestamp
-        "fir_pdf": request.build_absolute_uri(fir.fir_pdf.url)  # PDF URL
+        "fir_pdf": request.build_absolute_uri(fir.fir_pdf.name)  # PDF URL
     })

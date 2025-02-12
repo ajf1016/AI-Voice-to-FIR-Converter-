@@ -6,8 +6,14 @@ from .views import (
 )
 from django.conf import settings
 from django.conf.urls.static import static
+from .views import register_police, login_police, get_profile
+from rest_framework_simplejwt.views import TokenRefreshView
 
 urlpatterns = [
+    path("register/", register_police, name="register"),
+    path("login/", login_police, name="login"),
+    path("profile/", get_profile, name="profile"),
+    path("token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     # Upload Audio API
     path('upload/', upload_audio, name='upload-audio'),
 
