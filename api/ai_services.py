@@ -8,19 +8,19 @@ load_dotenv()
 # Load API Key
 GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
 
-# Load Whisper model
-whisper_model = whisper.load_model("base")
+# whisper_model = whisper.load_model("base")
 
 
 def audio_to_text(audio_path):
     """ Converts audio file to text using Whisper """
+    # Load the Whisper model only when needed
+    whisper_model = whisper.load_model("tiny")
     result = whisper_model.transcribe(audio_path)
     return result["text"]
 
 
 def generate_fir(transcribed_text):
     """ Uses Gemini AI to generate a structured and legally accurate FIR """
-
     model = genai.GenerativeModel('gemini-1.5-flash')
 
     prompt = f"""
@@ -39,5 +39,4 @@ def generate_fir(transcribed_text):
     """
 
     response = model.generate_content(prompt)
-
     return response.text

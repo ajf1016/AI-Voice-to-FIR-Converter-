@@ -1,18 +1,50 @@
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
-from .models import Audio, FIR
-from .serializers import AudioSerializer, FIRSerializer
+from .models import Audio, FIR, PoliceOfficer
+from .serializers import AudioSerializer, FIRSerializer, RegisterSerializer, LoginSerializer, PoliceOfficerSerializer
 from django.conf import settings
 import os
 from .ai_services import audio_to_text, generate_fir
 from .utils import generate_pdf
 from dotenv import load_dotenv
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework import status
+
 
 load_dotenv()
 
 
 GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def register_police(request):
+    """ Register a new police officer """
+    serializer = RegisterSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response({"message": "Registration successful"}, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def login_police(request):
+    """ Authenticate and return JWT token """
+    serializer = LoginSerializer(data=request.data)
+    if serializer.is_valid():
+        return Response(serializer.validated_data, status=status.HTTP_200_OK)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_profile(request):
+    """ Get logged-in police officer's profile """
+    officer = request.user
+    serializer = PoliceOfficerSerializer(officer)
+    return Response(serializer.data)
 
 
 @api_view(['POST'])

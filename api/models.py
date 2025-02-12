@@ -1,5 +1,43 @@
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
 import uuid
+
+
+class PoliceOfficerManager(BaseUserManager):
+    def create_user(self, uid, full_name, phone, password=None):
+        if not uid:
+            raise ValueError("Police UID is required")
+        officer = self.model(uid=uid, full_name=full_name, phone=phone)
+        officer.set_password(password)
+        officer.save(using=self._db)
+        return officer
+
+    def create_superuser(self, uid, full_name, phone, password):
+        officer = self.create_user(uid, full_name, phone, password)
+        officer.is_admin = True
+        officer.save(using=self._db)
+        return officer
+
+
+class PoliceOfficer(AbstractBaseUser, PermissionsMixin):
+    id = models.UUIDField(default=uuid.uuid4, primary_key=True, editable=False)
+    full_name = models.CharField(max_length=255)
+    uid = models.CharField(max_length=20, unique=True)  # Police UID
+    phone = models.CharField(max_length=15, unique=True)
+    is_active = models.BooleanField(default=True)
+    is_admin = models.BooleanField(default=False)
+
+    objects = PoliceOfficerManager()
+
+    USERNAME_FIELD = "uid"
+    REQUIRED_FIELDS = ["full_name", "phone"]
+
+    def __str__(self):
+        return self.full_name
+
+    @property
+    def is_staff(self):
+        return self.is_admin
 
 
 class Audio(models.Model):
