@@ -15,6 +15,8 @@ class PoliceOfficerManager(BaseUserManager):
     def create_superuser(self, uid, full_name, phone, password):
         officer = self.create_user(uid, full_name, phone, password)
         officer.is_admin = True
+        officer.is_superuser = True  # ✅ Grant superuser permissions
+        officer.is_staff = True  # ✅ Make the user a staff member
         officer.save(using=self._db)
         return officer
 
@@ -26,6 +28,8 @@ class PoliceOfficer(AbstractBaseUser, PermissionsMixin):
     phone = models.CharField(max_length=15, unique=True)
     is_active = models.BooleanField(default=True)
     is_admin = models.BooleanField(default=False)
+    is_superuser = models.BooleanField(default=False)
+    is_staff = models.BooleanField(default=False)
 
     objects = PoliceOfficerManager()
 
@@ -34,10 +38,6 @@ class PoliceOfficer(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.full_name
-
-    @property
-    def is_staff(self):
-        return self.is_admin
 
 
 class Audio(models.Model):

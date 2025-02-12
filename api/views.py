@@ -1,5 +1,5 @@
 from .models import Audio, FIR, PoliceOfficer
-from .serializers import AudioSerializer, FIRSerializer, RegisterSerializer, LoginSerializer, PoliceOfficerSerializer
+from .serializers import AudioSerializer, RegisterSerializer, LoginSerializer, PoliceOfficerSerializer
 from django.conf import settings
 import os
 from .ai_services import audio_to_text, generate_fir
@@ -9,6 +9,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
+from django.core.files import File
 
 
 load_dotenv()
@@ -81,7 +82,6 @@ def upload_audio(request):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def convert_audio_to_fir(request, audio_id):
-    print("API KEY", GOOGLE_API_KEY)
     """ Generate FIR from stored audio transcription """
     try:
         audio = Audio.objects.get(id=audio_id)
@@ -92,7 +92,7 @@ def convert_audio_to_fir(request, audio_id):
     if not audio.transcribed_text:
         return Response({"status": "error", "message": "Audio transcription missing"}, status=400)
 
-    # Generate FIR from transcribed text
+    # Generate FIR text
     fir_text = generate_fir(audio.transcribed_text)
 
     # Create FIR Entry in DB
@@ -102,23 +102,22 @@ def convert_audio_to_fir(request, audio_id):
         audio=audio
     )
 
-    # Generate FIR PDF with new format
+    # Generate FIR PDF and store it properly
     pdf_path = generate_pdf(fir_instance)
 
-    # Attach PDF to FIR
-    fir_instance.fir_pdf = pdf_path
-    fir_instance.save()
+    # Open the file as a Django File object
+    with open(pdf_path, "rb") as pdf_file:
+        fir_instance.fir_pdf.save(os.path.basename(
+            pdf_path), File(pdf_file), save=True)
 
     return Response({
         "status": "success",
         "case_id": fir_instance.case_id,
-        # Victim's voice
         "audio_file": request.build_absolute_uri(audio.audio_file.url),
-        "transcribed_text": audio.transcribed_text,  # Raw text
-        "fir_text": fir_instance.fir_text,  # Raw FIR text
-        "created_at": fir_instance.created_at,  # Timestamp
-        # PDF URL
-        "fir_pdf": request.build_absolute_uri(fir_instance.fir_pdf.url)
+        "transcribed_text": audio.transcribed_text,
+        "fir_text": fir_instance.fir_text,
+        "created_at": fir_instance.created_at,
+        "fir_pdf": request.build_absolute_uri(fir_instance.fir_pdf.url),
     })
 
 
@@ -139,5 +138,5 @@ def get_fir_details(request, case_id):
         "transcribed_text": fir.original_text,  # Raw text
         "fir_text": fir.fir_text,  # Raw FIR text
         "created_at": fir.created_at,  # Timestamp
-        "fir_pdf": request.build_absolute_uri(fir.fir_pdf.url)  # PDF URL
+        "fir_pdf": request.build_absolute_uri(fir.fir_pdf.name)  # PDF URL
     })
