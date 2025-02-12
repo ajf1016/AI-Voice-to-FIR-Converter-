@@ -49,7 +49,7 @@ def get_profile(request):
 
 
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def upload_audio(request):
     """ Uploads an audio file and automatically converts it to text """
     context = {
@@ -80,7 +80,7 @@ def upload_audio(request):
 
 
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def convert_audio_to_fir(request, audio_id):
     """ Generate FIR from stored audio transcription """
     try:
