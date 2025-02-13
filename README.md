@@ -16,8 +16,9 @@ A system that automates **First Information Report (FIR) generation** from voice
 
 ## Branch Structure
 - **Main Branch (main):** Contains Whisper AI and Gemini AI FIR generation.
-- **Fine-Tuning Repo:** [https://github.com/ajf1016/Fine-Tuning-Qwen1.5-0.5B][https://github.com/ajf1016/Fine-Tuning-Qwen1.5-0.5B]
-- **RAG Implementation Repo:** Includes RAG logic for legal queries.
+- **Fine-Tuning Repo:** [https://github.com/ajf1016/Fine-Tuning-Qwen1.5-0.5B]
+  [https://github.com/ajf1016/Fine-Tuning-Qwen1.5-0.5B]
+- **RAG Implementation Repo:** [https://github.com/ajf1016/Qwen-RAG-for-legal-queries]
 
 ## Installation
 
