@@ -15,9 +15,9 @@ A system that automates **First Information Report (FIR) generation** from voice
 ---
 
 ## Branch Structure
-- **Main Branch (main): Contains Whisper AI and Gemini AI FIR generation.
-- **Fine-Tuning Branch (fine-tuning): Holds Qwen model fine-tuning for Indian law data.
-- **RAG Implementation Branch (rag-implementation): Includes RAG logic for legal queries.
+- **Main Branch (main):** Contains Whisper AI and Gemini AI FIR generation.
+- **Fine-Tuning Branch (fine-tuning):** Holds Qwen model fine-tuning for Indian law data.
+- **RAG Implementation Branch (rag-implementation):** Includes RAG logic for legal queries.
 
 ## Installation
 
@@ -27,22 +27,22 @@ A system that automates **First Information Report (FIR) generation** from voice
    cd voice-to-fir
    ```
 
-2. **Set Up the Virtual Environment
+2. **Set Up the Virtual Environment**
    ```
    python -m venv venv
    source venv/bin/activate  # On Windows use: venv\Scripts\activate
    ```
    
-4. **Install Dependencies
+4. **Install Dependencies**
    ```
    pip install -r requirements.txt
    ```
-6. **Set Up Environment Variables Create a .env file and add:
+6. **Set Up Environment Variables Create a .env file and add:**
    ```
    OPENAI_API_KEY=your_openai_api_key
    GOOGLE_API_KEY=your_google_api_key
    ```
-7. **Run the Django Server
+7. **Run the Django Server**
    ```
    python manage.py runserver
    ```
